@@ -23,51 +23,58 @@ osSemaphoreDef(SEMitem);                       // Semaphore definition
 osSemaphoreId SEMspace;                         // Semaphore ID
 osSemaphoreDef(SEMspace);                       // Semaphore definition
 
-long int x=0;
-long int i=0;
-long int j=0;
-
 const unsigned int N = 8;
 unsigned char buffer[N];
-unsigned int insertPtr = 0;
-unsigned int removePtr = 0;
+unsigned int tail = 0;
+unsigned int head = 0;
 
-void put(unsigned char an_item){
+void put(unsigned char put_item){
 	osSemaphoreWait(SEMspace, osWaitForever);
 	osMutexWait(x_mutex, osWaitForever);
-	buffer[insertPtr] = an_item;
-	insertPtr = (insertPtr + 1) % N;
+		buffer[tail] = put_item;
+		tail = (tail + 1) % N;
 	osMutexRelease(x_mutex);
 	osSemaphoreRelease(SEMitem);
 }
 
+//Take item from buffer
 unsigned char get(){
-	unsigned int rr = 0xff;
+	unsigned char take_item=0x00;
 	osSemaphoreWait(SEMitem, osWaitForever);
 	osMutexWait(x_mutex, osWaitForever);
-	rr = buffer[removePtr];
-	removePtr = (removePtr + 1) % N;
+		take_item = buffer[head];
+		buffer[head] = 0x00;
+		head = (head + 1) % N;
 	osMutexRelease(x_mutex);
 	osSemaphoreRelease(SEMspace);
-	return rr;
+	return take_item;
 }
 
+int i = 0;
+int j = 0;
 int loopcount = 20;
+char name1[] = {'L','I','O','N','\n'};
+char name2[] = {'H','I','P','P','O','P','O','T','A','M','U','S'};
 
 //Producer
-char name[] = {'H','I','P','P','O','P','O','T','A','M','U','S'};
 void Producer (void const *argument) 
 {
-	for(; i<loopcount; i++){
-		put(name[i]);
+	for(;;)
+	{
+	for(i=0 <loopcount; i++){
+		put(name1[i]);
+	}
+		for(i= 0<loopcount; i++){
+		put(name2[i]);
+	}
 	}
 }
-
 //Consumer
 void Consumer (void const *argument) 
 {
+	unsigned int data = 0x00;
 	for(; j<loopcount; j++){
-		char data = get();
+		data = get();
 		SendChar(data);
 	}
 }
@@ -80,8 +87,9 @@ int main (void)
 	SEMspace = osSemaphoreCreate(osSemaphore(SEMspace), N);
 	x_mutex = osMutexCreate(osMutex(x_mutex));	
 	
+	T_con = osThreadCreate(osThread(Consumer), NULL);//consumer	
 	T_pro = osThreadCreate(osThread(Producer), NULL);//producer
-	T_con = osThreadCreate(osThread(Consumer), NULL);//consumer
+
  
 	osKernelStart ();                         // start thread execution 
 }
