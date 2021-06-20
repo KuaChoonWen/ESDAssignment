@@ -1,6 +1,7 @@
 --cpu Cortex-M3
 ".\main.o"
 ".\uart.o"
+".\test.o"
 ".\led_mcbstm32e.o"
 "..\..\..\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\RTOS\RTX\LIB\ARM\RTX_CM3.lib"
 ".\rtx_conf_cm.o"

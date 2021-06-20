@@ -7,6 +7,7 @@
 #include "stm32f10x.h"
 #include "cmsis_os.h"
 #include "uart.h"
+#include "test.h"
 
 void Producer (void const *argument);
 void Consumer (void const *argument);
@@ -28,6 +29,7 @@ unsigned char buffer[N];
 unsigned int tail = 0;
 unsigned int head = 0;
 
+//Put item into buffer
 void put(unsigned char put_item){
 	osSemaphoreWait(SEMspace, osWaitForever);
 	osMutexWait(x_mutex, osWaitForever);
@@ -53,29 +55,43 @@ unsigned char get(){
 int i = 0;
 int j = 0;
 int loopcount = 20;
-char name1[] = {'L','I','O','N','\n'};
-char name2[] = {'H','I','P','P','O','P','O','T','A','M','U','S'};
 
 //Producer
-void Producer (void const *argument) 
-{
+void Producer (void const *argument) {
+	
+	char *name1 = test1();
+	char *name2 = test2();
 	for(;;)
 	{
-	for(i=0 <loopcount; i++){
-		put(name1[i]);
-	}
-		for(i= 0<loopcount; i++){
-		put(name2[i]);
-	}
+		for(i=0; i<loopcount; i++){
+			put(name1[i]);
+			if (name1[i]==0x0A)
+				break;
+		}
+		
+		osSignalWait (0x04,osWaitForever);
+		
+		for(i=0; i<loopcount; i++){
+			put(name2[i]);
+			if (name2[i]==0x0A)
+				break;
+		}
+		
+		osSignalWait (0x04,osWaitForever);
 	}
 }
+
 //Consumer
-void Consumer (void const *argument) 
-{
-	unsigned int data = 0x00;
-	for(; j<loopcount; j++){
-		data = get();
-		SendChar(data);
+void Consumer (void const *argument) {
+	for(;;){
+		for(j=0; j<loopcount; j++){
+			char data = get();
+			SendChar(data);
+			if(data==0x0A){
+				osSignalSet(T_pro,0x04);
+				break;
+			}
+		}
 	}
 }
 

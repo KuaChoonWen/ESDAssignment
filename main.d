@@ -10,3 +10,4 @@
 .\main.o: C:\Users\Asus\AppData\Local\Arm\Packs\ARM\CMSIS\5.7.0\CMSIS\RTOS\RTX\INC\cmsis_os.h
 .\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stddef.h
 .\main.o: uart.h
+.\main.o: test.h
