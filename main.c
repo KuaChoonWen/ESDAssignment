@@ -99,6 +99,7 @@ void Consumer2 (void const *argument) {
 			break;
 	}
 }
+
 int n = 0;
 //Read from Message Queue, Compare and Print Result
 void ShowMes (void const *argument){
