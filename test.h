@@ -1,2 +1,1 @@
-extern char *test1();
-extern char *test2();
+extern char *test();

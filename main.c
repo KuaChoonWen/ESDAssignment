@@ -10,12 +10,23 @@
 #include "test.h"
 
 void Producer (void const *argument);
-void Consumer (void const *argument);
+void Consumer1 (void const *argument);
+void Consumer2 (void const *argument);
+void ShowMes (void const *argument);
+
 osThreadDef(Producer, osPriorityNormal, 1, 0);
-osThreadDef(Consumer, osPriorityNormal, 1, 0);
+osThreadDef(Consumer1, osPriorityNormal, 1, 0);
+osThreadDef(Consumer2, osPriorityNormal, 1, 0);
+osThreadDef(ShowMes, osPriorityNormal, 1, 0);
 
 osThreadId T_pro;
-osThreadId T_con;
+osThreadId T_con1;
+osThreadId T_con2;
+osThreadId T_show;
+	
+osMessageQId Q_LED;
+osMessageQDef (Q_LED,0x16,unsigned char);
+osEvent  result;
 	
 osMutexId x_mutex;
 osMutexDef(x_mutex);
@@ -54,59 +65,56 @@ unsigned char get(){
 
 int i = 0;
 int j = 0;
+int k = 0;
 int loopcount = 20;
 
 //Producer
 void Producer (void const *argument) {
+	char *name = test();
+	for(i=0; i<loopcount; i++){
+		put(name[i]);
+		if (name[i]==0x0A)
+			break;
+	}
+}
+
+//Consumer 1: Get word
+void Consumer1 (void const *argument) {
+	for(j=0; j<loopcount; j++){
+		char data = get();
+		osMessagePut(Q_LED,data,osWaitForever);
+		if(data==0x0A)
+			break;
+	}
+}
+
+//Consumer 2: Get Word
+void Consumer2 (void const *argument) {
+	for(k=0; k<loopcount; k++){
+		char data2 = get();
+		osMessagePut(Q_LED,data2,osWaitForever);
+		if(data2==0x0A)
+			break;
+	}
+}
+
+//Read from Message Queue, Compare and Print Result
+void ShowMes (void const *argument){
 	
-	char *name1 = test1();
-	char *name2 = test2();
-	for(;;)
-	{
-		for(i=0; i<loopcount; i++){
-			put(name1[i]);
-			if (name1[i]==0x0A)
-				break;
-		}
-		
-		osSignalWait (0x04,osWaitForever);
-		
-		for(i=0; i<loopcount; i++){
-			put(name2[i]);
-			if (name2[i]==0x0A)
-				break;
-		}
-		
-		osSignalWait (0x04,osWaitForever);
-	}
 }
 
-//Consumer
-void Consumer (void const *argument) {
-	for(;;){
-		for(j=0; j<loopcount; j++){
-			char data = get();
-			SendChar(data);
-			if(data==0x0A){
-				osSignalSet(T_pro,0x04);
-				break;
-			}
-		}
-	}
-}
-
-int main (void) 
-{
+int main (void) {
 	osKernelInitialize ();                    // initialize CMSIS-RTOS
 	USART1_Init();
 	SEMitem = osSemaphoreCreate(osSemaphore(SEMitem), 0);
 	SEMspace = osSemaphoreCreate(osSemaphore(SEMspace), N);
-	x_mutex = osMutexCreate(osMutex(x_mutex));	
+	x_mutex = osMutexCreate(osMutex(x_mutex));							
+	Q_LED = osMessageCreate(osMessageQ(Q_LED),NULL);				//create the message queue
+	T_pro = osThreadCreate(osThread(Producer), NULL);				//producer
+	T_con1 = osThreadCreate(osThread(Consumer1), NULL);			//consumer1
+	T_con2 = osThreadCreate(osThread(Consumer2), NULL);			//consumer2
+	T_show = osThreadCreate(osThread(ShowMes), NULL);				//Show Result
 	
-	T_con = osThreadCreate(osThread(Consumer), NULL);//consumer	
-	T_pro = osThreadCreate(osThread(Producer), NULL);//producer
-
- 
 	osKernelStart ();                         // start thread execution 
 }
 
