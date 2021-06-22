@@ -6,8 +6,10 @@
 *----------------------------------------------------------------------------*/
 #include "stm32f10x.h"
 #include "cmsis_os.h"
+#include "stdio.h"
 #include "uart.h"
 #include "test.h"
+
 
 void Producer (void const *argument);
 void Consumer1 (void const *argument);
@@ -97,10 +99,60 @@ void Consumer2 (void const *argument) {
 			break;
 	}
 }
-
+int n = 0;
 //Read from Message Queue, Compare and Print Result
 void ShowMes (void const *argument){
+	char *text = test();
+	char cap[8];
+	char input[13];
+	char output[13];
+	char comp[10];
+	int size;
+
+	//Input
+	sprintf(cap, "Input: ");
+	for(n=0; n<7; n++){
+		SendChar(cap[n]);
+	}
+	for(n=0; n<loopcount; n++){
+		SendChar(text[n]);
+		input[n]=text[n];
+		if (input[n] == 0x0A)
+			break;
+	}
 	
+	//Output
+	sprintf(cap, "Output: ");
+	for(n=0; n<8; n++){
+		SendChar(cap[n]);
+	}
+	for(n=0; n<loopcount; n++){
+		result = osMessageGet(Q_LED,osWaitForever);	
+		output[n] = result.value.v;
+		SendChar(result.value.v);
+		if (result.value.v == 0x0A)
+			break;
+	}
+	
+	size = sizeof(input);
+	//Compare
+	for(n=0; n<size; n++){
+		if (input[n] != output[n]){
+			sprintf(comp, " NOT MATCH");
+			break;
+		}
+		else
+			sprintf(comp, "MATCH");
+	}
+	
+	//Result
+	sprintf(cap, "Result: ");
+	for(n=0; n<8; n++){
+		SendChar(cap[n]);
+	}
+	for(n=0; n<10; n++){
+		SendChar(comp[n]);
+	}
 }
 
 int main (void) {
